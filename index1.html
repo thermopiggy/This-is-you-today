@@ -1,1 +1,429 @@
+<!doctype html>
+<html lang="bg">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Слот машина с думи + AI екран</title>
+  <style>
+    :root{
+      --bg:#0b0e14;
+      --panel:#0f1422;
+      --gold1:#b07b1f;
+      --gold2:#ffcc66;
+      --gold3:#7a4a00;
+      --cream:#feeace;
+      --red:#ff3b3b;
+      --amber:#ffb84d;
+      --neon:#ff4fd8;
+      --text:#e9eefc;
+      --muted:#97a0b8;
+      --win:#69f0ae;
+      --shadow: 0 18px 60px #0008;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% -10%, #1d2131 0%, #0b0e14 60%) no-repeat,
+        radial-gradient(700px 400px at 80% 110%, #132039 0%, #0b0e14 70%) no-repeat,
+        var(--bg);
+      display:grid; place-items:center; padding:18px;
+    }
 
+    .layout{
+      width:min(1200px,100%);
+      display:grid; gap:16px;
+      grid-template-columns: 1.15fr 0.85fr;
+    }
+    @media (max-width: 980px){
+      .layout{ grid-template-columns: 1fr; }
+    }
+
+    /* ====== SLOT MACHINE ====== */
+    .machine{
+      position:relative;
+      background:
+        linear-gradient(180deg, #1c2235, #0f1422 35%, #0f1422 65%, #0a0f1a),
+        radial-gradient(140% 120% at 50% -20%, #202946, #0f1422 60%);
+      border-radius:28px;
+      padding:16px 16px 22px;
+      border:1px solid #243055;
+      box-shadow: var(--shadow);
+    }
+
+    /* marquee top */
+    .marquee{
+      position:relative;
+      height:84px; border-radius:20px;
+      background:
+        linear-gradient(180deg, #2a2444, #551b4f 55%, #301748 100%);
+      border:2px solid #6c3b7a;
+      box-shadow: inset 0 0 30px #0008, 0 10px 30px #0009;
+      display:grid; place-items:center;
+      margin:4px 6px 14px;
+    }
+    .marquee .title{
+      font-size: clamp(18px,3.6vw,28px);
+      font-weight:900;
+      letter-spacing:2px;
+      color:#ffd3f3;
+      text-shadow: 0 0 14px #ff45d6, 0 0 2px #000;
+    }
+
+    /* frame gold */
+    .gold{
+      background:
+        linear-gradient(180deg, var(--gold2), var(--gold1) 45%, var(--gold3) 55%, #5a3700 80%, #2c1c00);
+      border:1px solid #3d2700;
+      box-shadow: inset 0 0 0 2px #ffdda8, inset 0 0 30px #0007;
+    }
+
+    /* reels window */
+    .reels-wrap{
+      padding:12px;
+      border-radius:18px;
+      background:#120f1c;
+      border:1px solid #2a2a3f;
+      box-shadow: inset 0 0 30px #0009, 0 6px 18px #0008;
+      margin:0 6px 10px;
+    }
+    .reels-window{
+      border-radius:16px;
+      padding:10px;
+      background:#0b0f19;
+      border:1px solid #202742;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:10px;
+      align-items:center;
+    }
+    .reel{
+      position:relative;
+      height:110px;
+      border-radius:14px;
+      overflow:hidden;
+    }
+    .reel .drum{
+      position:absolute; inset:0;
+      display:grid; place-items:center;
+      background:
+        repeating-linear-gradient(90deg, #ececef 0 3px, #e6e7ef 3px 6px),
+        linear-gradient(180deg,#f6f6fb,#e6e9f8 60%, #dadff4);
+      border:1px solid #c4c8df;
+      border-radius:12px;
+      box-shadow: inset 0 0 0 2px #ffffffb0, inset 0 -16px 24px #0002, 0 6px 16px #0007;
+    }
+    .slot-word{
+      font-weight:900;
+      font-size: clamp(22px, 4.6vw, 34px);
+      letter-spacing:.3px;
+      color:#c2141a;
+      text-shadow: 0 1px 0 #fff, 0 0 14px #ff8080, 0 2px 0 #831014;
+      -webkit-text-stroke: .6px #6b0d10;
+      padding:0 8px; text-align:center;
+    }
+
+    /* control panel  */
+    .panel{
+      margin:10px 6px 0;
+      padding:10px 12px 14px;
+      border-radius:16px;
+      background: linear-gradient(180deg,#151b2a,#0d1322);
+      border:1px solid #26304a;
+      box-shadow: inset 0 0 20px #0007;
+    }
+    .keys{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap:10px;
+    }
+    @media (max-width:560px){
+      .keys{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    button{
+      appearance:none; cursor:pointer; border:none; border-radius:12px;
+      font-weight:800; letter-spacing:.3px;
+      padding:12px 12px; color:#121318;
+      box-shadow: inset 0 -3px 0 #0006, 0 6px 14px #0007;
+      transition: transform .08s ease, filter .12s ease, opacity .2s;
+    }
+    .btn-primary{ background: linear-gradient(180deg,#57ff7a,#1dd858); }
+    .btn-amber{ background: linear-gradient(180deg,#ffd18a,#ffb03a); }
+    .btn-blue{ background: linear-gradient(180deg,#8cc6ff,#3fa0ff); }
+    .btn-pink{ background: linear-gradient(180deg,#ff99e7,#ff53d7); }
+    .btn-dark{ background: linear-gradient(180deg,#d6daee,#bfc6e9); }
+    button:hover{ filter:brightness(1.06) }
+    button:active{ transform: translateY(1px); }
+    button[disabled]{ opacity:.6; cursor:not-allowed }
+
+    .leverBox{
+      position:absolute; right:-42px; top:92px;
+      width:42px; height:180px; display:grid; place-items:center;
+    }
+    .lever-stick{ width:8px; height:120px; background:linear-gradient(180deg,#c9a361,#6a4e21); border-radius:6px; box-shadow: inset 0 0 0 2px #ffd590; }
+    .lever-ball{ width:34px; height:34px; margin-top:6px; border-radius:50%;
+      background: radial-gradient(60% 60% at 35% 30%, #fff 0 15%, #ff8080 15% 60%, #c70b0b 60% 100%);
+      box-shadow: 0 0 0 3px #5d0008, 0 0 14px #ff4b4b;
+      transform-origin: 50% -30px; transition: transform .2s;
+    }
+
+    /* ====== KARAOKE / AI SCREEN ====== */
+    .karaoke{
+      position:relative;
+      border-radius:22px; padding:14px;
+      background: linear-gradient(180deg,#12162a,#0c1020);
+      border:1px solid #253055;
+      box-shadow: var(--shadow);
+      min-height: 420px;
+    }
+    .karaoke .neon{
+      border-radius:16px; padding:10px; border:2px solid #5a1a78;
+      box-shadow: 0 0 16px #a328ffaa, inset 0 0 20px #0008;
+      background: radial-gradient(140% 180% at 50% 0%, #1e0f2e, #0b0e18 60%);
+    }
+    .screen{
+      position:relative; aspect-ratio:16/9; background:#070a12;
+      border:1px solid #1b1f35; border-radius:12px; overflow:hidden;
+      display:grid; place-items:center;
+    }
+    .screen img{ max-width:100%; max-height:100%; display:none }
+    .screen .ph{ color:var(--muted) }
+    .neon-title{
+      margin:6px 0 8px; font-weight:900; font-size: clamp(16px, 2.4vw, 22px);
+      color:#ffd3f3; text-shadow: 0 0 14px #ff45d6;
+      display:flex; align-items:center; gap:8px;
+    }
+    .neon-title .dot{
+      width:8px; height:8px; border-radius:50%; background:#26ff92;
+      box-shadow: 0 0 8px #26ff92;
+    }
+
+    .muted{ color:var(--muted) }
+    .result{ margin:8px 6px 2px; font-size: clamp(16px,2.2vw,20px) }
+    .sentence{ font-weight:800 }
+    .win{ color: var(--win) }
+
+    /* tiny link row for language switch */
+    .lang{
+      display:flex; gap:10px; align-items:center; margin:6px 8px 0;
+      font-size:13px;
+    }
+    .lang a{ color:#a9c7ff; text-decoration:none; }
+    .lang a:hover{ text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <!-- LEFT: Slot Machine -->
+    <section class="machine">
+      <div class="marquee gold">
+        <div class="title">WORD CASINO</div>
+      </div>
+
+      <div class="reels-wrap gold">
+        <div class="reels-window">
+          <div class="reel"><div class="drum"><span class="slot-word">—</span></div></div>
+          <div class="reel"><div class="drum"><span class="slot-word">—</span></div></div>
+          <div class="reel"><div class="drum"><span class="slot-word">—</span></div></div>
+        </div>
+      </div>
+
+      <div class="panel gold">
+        <div class="keys">
+          <button id="spinBtn" class="btn-primary">ЗАВЪРТИ (Space)</button>
+          <button id="shuffleBtn" class="btn-amber">РАЗБЪРКАЙ</button>
+          <button id="copyBtn" class="btn-blue">КОПИРАЙ</button>
+          <button id="regenBtn" class="btn-pink" title="Ново изображение със същия prompt">РЕГЕНЕРИРАЙ</button>
+        </div>
+        <div class="lang">
+          <a href="index-en.html">EN 🌐</a>
+          <span class="muted">Списъците са в кода: <code>ADJ</code>, <code>WHO</code>, <code>VERB</code>.</span>
+        </div>
+      </div>
+
+      <div class="leverBox" aria-hidden="true">
+        <div class="lever-stick"></div>
+        <div id="leverBall" class="lever-ball"></div>
+      </div>
+
+      <div class="result" id="result"><span class="muted">Натисни „ЗАВЪРТИ“.</span></div>
+    </section>
+
+    <!-- RIGHT: Karaoke / AI screen -->
+    <aside class="karaoke">
+      <div class="neon">
+        <div class="neon-title"><span class="dot"></span> Karaoke Screen — AI Image</div>
+        <div class="screen">
+          <img id="aiImg" alt="AI резултат" />
+          <span id="aiPlaceholder" class="ph">Още няма изображение</span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+<script>
+/* ===== Данни ===== */
+const ADJ = [
+  "надменен","красив","тъп","благороден","гладен","отчаян","пиян","злобен",
+  "хитър","милозлив","безскрупулен","сантиментален","кисел","самоуверен","нервен","скришен",
+  "яростен","спокоен","скромен","шумен","замаян","нахъсан","великодушен","чаровен","егоистичен"
+];
+const WHO = [
+  "Илън Мъск","Мадона","Чък Норис","Доналд Тръмп","Клеопатра","Христо Стоичков","Владимир Путин","Лейди Гага",
+  "Бийонсе","Лео Меси","Кристиано Роналдо","Михаил Горбачов","Алберт Айнщайн","Никола Тесла","Адел","Опра Уинфри",
+  "Юлий Цезар","Наполеон Бонапарт","Александър Велики","Чингис хан","Уинстън Чърчил","Мария Антоанета","Жана д’Арк","Кралица Виктория"
+];
+const VERB = [
+  "танцува","краде","проповядва","псува","готви","плаче","стриймва","ремонтира",
+  "лети","мъдрува","рисува","саботира","блъфира","земеделства","тактува","сервира",
+  "рафинира","тренира","акостира","пее","шофира","инвестира","туитва"
+];
+
+/* ===== Селектори и състояние ===== */
+const reels = [...document.querySelectorAll('.reel')].map((el, i)=>({
+  el, idx:i, ticker: el.querySelector('.slot-word'), interval:null, value:'—'
+}));
+const spinBtn = document.getElementById('spinBtn');
+const shuffleBtn = document.getElementById('shuffleBtn');
+const copyBtn = document.getElementById('copyBtn');
+const regenBtn = document.getElementById('regenBtn');
+const resultEl = document.getElementById('result');
+const leverBall = document.getElementById('leverBall');
+const aiImg = document.getElementById('aiImg');
+const aiPlaceholder = document.getElementById('aiPlaceholder');
+
+let spinning = false;
+
+function randOf(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+function byIndex(i){ return i===0?ADJ: i===1?WHO:VERB; }
+function setWord(reel,w){ reel.ticker.textContent = w; reel.value = w; }
+
+function animateLever(active){
+  leverBall.style.transform = active ? 'rotate(18deg) translateY(4px)' : 'rotate(0deg) translateY(0)';
+}
+
+function spinOne(reel, duration){
+  const words = byIndex(reel.idx);
+  clearInterval(reel.interval);
+  reel.interval = setInterval(()=> setWord(reel, randOf(words)), 60);
+  return new Promise(res=>{
+    setTimeout(()=>{
+      clearInterval(reel.interval);
+      let ticks = 8 + Math.floor(Math.random()*6);
+      const tick = ()=>{
+        setWord(reel, randOf(words));
+        if(--ticks>0) setTimeout(tick, Math.min(120+(8-ticks)*12,220));
+        else res();
+      };
+      tick();
+    }, duration);
+  });
+}
+
+async function spin(){
+  if(spinning) return; spinning = true;
+  spinBtn.disabled = true; animateLever(true);
+  resultEl.innerHTML = '<span class="muted">… въртим …</span>';
+
+  const base = 600 + Math.random()*420;
+  await Promise.all([
+    spinOne(reels[0], base),
+    spinOne(reels[1], base+420),
+    spinOne(reels[2], base+840),
+  ]);
+
+  animateLever(false); spinBtn.disabled = false; spinning = false;
+  showSentence();
+}
+
+function showSentence(){
+  const [a,b,c] = reels.map(r=>r.value);
+  const s = `${capitalize(a)} ${b} ${c}.`;
+  const wow = (a.length+b.length+c.length)%7===0;
+  resultEl.innerHTML = `<span class="sentence ${wow?'win':''}">${s}</span>`;
+  preparePrompt();          // автоматично строим prompt
+  if(window.AI_AUTOGEN!==false) generateViaApi(); // автогенериране
+}
+
+function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+function shuffleLists(){
+  [ADJ,WHO,VERB].forEach(arr=>{
+    for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  });
+  reels.forEach(r=> setWord(r,'—'));
+  resultEl.innerHTML = '<span class="muted">Списъците са разбъркани. Завърти пак.</span>';
+}
+
+function copySentence(){
+  const text = resultEl.textContent.trim();
+  if(!text) return;
+  navigator.clipboard.writeText(text).then(()=>{
+    copyBtn.textContent='Копирано!'; setTimeout(()=>copyBtn.textContent='КОПИРАЙ',900);
+  });
+}
+
+/* ===== Prompt за AI ===== */
+let lastPrompt = '';
+function buildPrompt(){
+  const [a,b,c] = reels.map(r=>r.value);
+  const sentence = `${capitalize(a)} ${b} ${c}.`;
+
+  const subject = `a cinematic, photorealistic scene of a ${a} lookalike of ${b}`;
+  const action  = `clearly ${c} (make the action visually obvious)`;
+  const camera  = `medium shot, three-quarter view, shallow depth of field, sharp focus`;
+  const style   = `natural skin tones, realistic lighting, soft diffusion, detailed textures`;
+  const comp    = `clean background, no text overlays, no logos, no watermarks`;
+  const neg     = `lowres, blurry, extra fingers, distorted face, disfigured, caricature, nsfw, violence`;
+
+  return [
+    `${subject}, ${action}.`,
+    `${camera}; ${style}; ${comp}.`,
+    `NEGATIVE: ${neg}.`,
+    `CAPTION (do not draw text): "${sentence}"`
+  ].join(' ');
+}
+function preparePrompt(){ lastPrompt = buildPrompt(); }
+
+/* ===== API повикване (безплатен бекенд или твой такъв) ===== */
+async function generateViaApi(){
+  const endpoint = window.AI_ENDPOINT;
+  if(!endpoint){ console.log('AI DEMO: липсва window.AI_ENDPOINT. prompt =>', lastPrompt); return; }
+  const payload = { prompt: lastPrompt, size: 'landscape' };
+
+  try{
+    regenBtn.disabled = true; regenBtn.textContent='ГЕНЕРИРАМ…';
+    const r = await fetch(endpoint,{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data = await r.json();
+    if(!data.image_url) throw new Error('Липсва image_url');
+    aiImg.src = data.image_url; aiImg.style.display='block'; aiPlaceholder.style.display='none';
+  }catch(e){
+    alert('Грешка при генериране: '+e.message);
+    console.error(e);
+  }finally{
+    regenBtn.disabled=false; regenBtn.textContent='РЕГЕНЕРИРАЙ';
+  }
+}
+
+/* ===== Събития ===== */
+spinBtn.addEventListener('click', spin);
+shuffleBtn.addEventListener('click', shuffleLists);
+copyBtn.addEventListener('click', copySentence);
+regenBtn.addEventListener('click', generateViaApi);
+window.addEventListener('keydown', e=>{ if(e.code==='Space'){ e.preventDefault(); spin(); } });
+
+/* първи показ */
+reels.forEach((r,i)=> setWord(r, ['надменен','Клеопатра','танцува'][i] || '—'));
+showSentence();
+
+/* конфигурация (по желание) */
+// window.AI_ENDPOINT = 'https://YOUR-PROJECT.vercel.app/api/image';
+// window.AI_AUTOGEN = true; // автоматично генериране след всяко завъртане
+</script>
+</body>
+</html>
