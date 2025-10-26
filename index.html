@@ -64,8 +64,6 @@
     .muted{color:var(--muted)}
 
     .small{font-size:13px; color:var(--muted)}
-  $1
-  <style>
     .ai.card{background:linear-gradient(180deg, #141827, #101522);}
   </style>
 </head>
@@ -83,33 +81,43 @@
     <div class="btns">
       <button id="spinBtn" class="primary">Завърти (Space)</button>
       <button id="shuffleBtn">Разбъркай списъците</button>
-      $1
-      <button id="imgBtn">Генерирай изображение (AI)</button>$2
+      <button id="copyBtn">Копирай изречението</button>
+      <button id="imgBtn">Генерирай изображение (AI)</button>
+      <div class="lever" aria-hidden="true">
+        <div class="stick"></div>
+        <div class="ball" id="ball"></div>
+      </div>
     </div>
 
     <div class="result" id="result"><span class="muted">Натисни „Завърти“.</span></div>
-    $1
+    <div class="hint small">
+      Подмяна на думи: редактирай масивите <code>ADJ</code>, <code>WHO</code>, <code>VERB</code> в кода.
+    </div>
 
-  <div class="ai card" style="margin-top:16px;">
-    <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
-      <div style="flex:1 1 280px; min-width:260px">
-        <div class="small" style="margin-bottom:6px; color:var(--muted)">AI prompt (автоматично попълнен – можеш да го редактираш):</div>
-        <textarea id="aiPrompt" rows="4" style="width:100%; background:#0e1119; color:var(--text); border:1px solid var(--cardBorder); border-radius:10px; padding:10px; resize:vertical"></textarea>
-        <div style="display:flex; gap:8px; margin-top:8px">
-          <button id="copyPromptBtn">Копирай prompt</button>
-          <button id="sendToApiBtn" title="POST към window.AI_ENDPOINT">Изпрати към API</button>
+    <div class="ai card" style="margin-top:16px;">
+      <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
+        <div style="flex:1 1 280px; min-width:260px">
+          <div class="small" style="margin-bottom:6px; color:var(--muted)">
+            AI prompt (автоматично попълнен – можеш да го редактираш):
+          </div>
+          <textarea id="aiPrompt" rows="4" style="width:100%; background:#0e1119; color:var(--text); border:1px solid var(--cardBorder); border-radius:10px; padding:10px; resize:vertical"></textarea>
+          <div style="display:flex; gap:8px; margin-top:8px">
+            <button id="copyPromptBtn">Копирай prompt</button>
+            <button id="sendToApiBtn" title="POST към window.AI_ENDPOINT">Изпрати към API</button>
+          </div>
+          <div class="small" style="margin-top:6px; color:var(--muted)">
+            * Настрой <code>window.AI_ENDPOINT</code> за автоматично генериране на изображение след завъртане.
+          </div>
         </div>
-        <div class="small" style="margin-top:6px; color:var(--muted)">* Настрой <code>window.AI_ENDPOINT</code> за автоматично генериране на изображение след завъртане.</div>
-      </div>
-      <div style="flex:1 1 320px; min-width:260px">
-        <div class="small" style="margin-bottom:6px; color:var(--muted)">Генерирано изображение:</div>
-        <div id="aiImgWrap" style="aspect-ratio:16/9; background:#0e1119; border:1px solid var(--cardBorder); border-radius:12px; display:grid; place-items:center; overflow:hidden">
-          <img id="aiImg" alt="AI резултат" style="max-width:100%; max-height:100%; display:none"/>
-          <span id="aiPlaceholder" class="muted">Още няма изображение</span>
+        <div style="flex:1 1 320px; min-width:260px">
+          <div class="small" style="margin-bottom:6px; color:var(--muted)">Генерирано изображение:</div>
+          <div id="aiImgWrap" style="aspect-ratio:16/9; background:#0e1119; border:1px solid var(--cardBorder); border-radius:12px; display:grid; place-items:center; overflow:hidden">
+            <img id="aiImg" alt="AI резултат" style="max-width:100%; max-height:100%; display:none"/>
+            <span id="aiPlaceholder" class="muted">Още няма изображение</span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
   </div>
 
 <script>
@@ -145,7 +153,7 @@ const spinBtn = document.getElementById('spinBtn');
 const shuffleBtn = document.getElementById('shuffleBtn');
 const copyBtn = document.getElementById('copyBtn');
 const resultEl = document.getElementById('result');
-$1
+const ball = document.getElementById('ball');
 const imgBtn = document.getElementById('imgBtn');
 const aiPromptEl = document.getElementById('aiPrompt');
 const aiImg = document.getElementById('aiImg');
@@ -173,7 +181,6 @@ function spinOne(reel, duration){
   return new Promise(res=>{
     setTimeout(()=>{
       clearInterval(reel.interval);
-      // финален избор с малко драматично цъкане
       let ticks = 8 + Math.floor(Math.random()*6);
       const tick = ()=>{
         setWord(reel, randOf(words));
@@ -206,9 +213,8 @@ function showSentence(){
   const s = `${capitalize(a)} ${b} ${c}.`;
   const isFunny = (a.length + b.length + c.length) % 7 === 0;
   resultEl.innerHTML = `<span class="sentence ${isFunny?'win':''}">${s}</span>`;
-  // === Ново: автоматично изграждане на prompt + (по избор) авто-генериране на изображение ===
   preparePromptUI();
-  if(window.AI_AUTOGEN !== false){ // по подразбиране true
+  if(window.AI_AUTOGEN !== false){
     generateViaApi();
   }
 }
@@ -216,11 +222,9 @@ function showSentence(){
 function capitalize(str){ return str.charAt(0).toUpperCase() + str.slice(1); }
 
 function shuffleLists(){
-  // проста разбърквация на масивите (Fisher–Yates)
   [ADJ, WHO, VERB].forEach(arr=>{
     for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
   });
-  // визуално освежаване
   reels.forEach(r=> setWord(r, '—'));
   resultEl.innerHTML = '<span class="muted">Списъците са разбъркани. Завърти пак.</span>';
 }
@@ -245,7 +249,7 @@ function buildPrompt(){
 function preparePromptUI(){ aiPromptEl.value = buildPrompt(); }
 
 async function generateViaApi(){
-  const endpoint = window.AI_ENDPOINT; // напр. 'https://your-domain.com/api/image'
+  const endpoint = window.AI_ENDPOINT;
   const payload = { prompt: aiPromptEl.value, size: 'landscape' };
   if(!endpoint){
     console.log('AI DEMO: липсва window.AI_ENDPOINT. payload =>', payload);
@@ -264,9 +268,10 @@ async function generateViaApi(){
   }finally{ sendToApiBtn.disabled = false; sendToApiBtn.textContent = 'Изпрати към API'; }
 }
 
-$1
+// === Събития ===
+spinBtn.addEventListener('click', spin);
 shuffleBtn.addEventListener('click', shuffleLists);
-$1
+copyBtn.addEventListener('click', copySentence);
 imgBtn.addEventListener('click', ()=>{ preparePromptUI(); aiPromptEl.scrollIntoView({behavior:'smooth', block:'center'}); });
 copyPromptBtn.addEventListener('click', ()=>{ navigator.clipboard.writeText(aiPromptEl.value); copyPromptBtn.textContent='Копирано!'; setTimeout(()=>copyPromptBtn.textContent='Копирай prompt', 1000); });
 sendToApiBtn.addEventListener('click', generateViaApi);
@@ -275,9 +280,10 @@ window.addEventListener('keydown', e=>{ if(e.code==='Space'){ e.preventDefault()
 // първи показ
 reels.forEach((r,i)=> setWord(r, ['надменен','Клеопатра','танцува'][i] || '—'));
 showSentence();
-// По желание конфиг:
+
+// конфигурация
 // window.AI_ENDPOINT = 'https://твоят-домейн.bg/api/image';
-// window.AI_AUTOGEN = true; // автоматично извикване на generateViaApi() след всяко завъртане
+// window.AI_AUTOGEN = true;
 </script>
 </body>
 </html>
