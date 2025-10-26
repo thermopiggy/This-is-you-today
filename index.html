@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html lang="bg">
 <head>
   <meta charset="utf-8" />
@@ -27,66 +26,69 @@
       background: var(--card); border:1px solid var(--cardBorder); border-radius:20px; padding:24px; box-shadow: 0 20px 60px #0007;
     }
     h1{margin:0 0 8px; font-size:clamp(22px, 3vw, 36px); letter-spacing:.3px}
-    .sub{color:var(--muted); margin-bottom:18px}.reels{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:14px; margin:14px 0 8px}
-.reel{
-  position:relative; height:92px; border-radius:16px; border:1px solid var(--cardBorder); background:#0e1119;
-  display:grid; place-items:center; overflow:hidden; box-shadow: inset 0 0 0 1px #0006, inset 0 -12px 24px #0007;
-}
-.slot-word{font-weight:700; font-size: clamp(26px, 5vw, 36px); letter-spacing:.2px; text-shadow: 0 2px 0 #000;}
+    .sub{color:var(--muted); margin-bottom:18px}
 
-.btns{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:16px}
-button{
-  appearance:none; border:1px solid var(--cardBorder); background:#111629; color:var(--text);
-  padding:12px 16px; border-radius:12px; font-weight:700; cursor:pointer; transition:.2s transform, .2s filter, .2s opacity;
-}
-button.primary{ background: linear-gradient(180deg, #2030ff 0%, #1a2bd8 100%); border-color:#2f3cff; }
-button.primary:disabled{opacity:.6; cursor:not-allowed}
-button:hover{filter:brightness(1.08)}
-button:active{transform:translateY(1px)}
+    .reels{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:14px; margin:14px 0 8px}
+    .reel{
+      position:relative; height:92px; border-radius:16px; border:1px solid var(--cardBorder); background:#0e1119;
+      display:grid; place-items:center; overflow:hidden; box-shadow: inset 0 0 0 1px #0006, inset 0 -12px 24px #0007;
+    }
+    .slot-word{font-weight:700; font-size: clamp(26px, 5vw, 36px); letter-spacing:.2px; text-shadow: 0 2px 0 #000;}
 
-.lever{ margin-left:auto; display:flex; align-items:center; gap:8px }
-.ball{width:22px;height:22px;border-radius:50%;background:var(--accent); box-shadow:0 0 0 3px #0006, 0 0 18px #ffda61aa}
-.stick{width:5px;height:28px;background:#333;border-radius:3px}
+    .btns{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:16px}
+    button{
+      appearance:none; border:1px solid var(--cardBorder); background:#111629; color:var(--text);
+      padding:12px 16px; border-radius:12px; font-weight:700; cursor:pointer; transition:.2s transform, .2s filter, .2s opacity;
+    }
+    button.primary{ background: linear-gradient(180deg, #2030ff 0%, #1a2bd8 100%); border-color:#2f3cff; }
+    button.primary:disabled{opacity:.6; cursor:not-allowed}
+    button:hover{filter:brightness(1.08)}
+    button:active{transform:translateY(1px)}
 
-.result{margin-top:12px; font-size:clamp(18px, 2.3vw, 22px)}
-.sentence{font-weight:800}
-.hint{color:var(--muted); font-size:14px; margin-top:2px}
+    .lever{ margin-left:auto; display:flex; align-items:center; gap:8px }
+    .ball{width:22px;height:22px;border-radius:50%;background:var(--accent); box-shadow:0 0 0 3px #0006, 0 0 18px #ffda61aa}
+    .stick{width:5px;height:28px;background:#333;border-radius:3px}
 
-.ticker{position:absolute; inset:0; display:grid; place-items:center;}
-.ticker span{display:block; will-change:transform}
+    .result{margin-top:12px; font-size:clamp(18px, 2.3vw, 22px)}
+    .sentence{font-weight:800}
+    .hint{color:var(--muted); font-size:14px; margin-top:2px}
 
-.blink{animation:blink 1s infinite}
-@keyframes blink{50%{opacity:.35}}
+    .ticker{position:absolute; inset:0; display:grid; place-items:center;}
+    .ticker span{display:block; will-change:transform}
 
-.win{color:var(--win)}
-.accent{color:var(--accent)}
-.muted{color:var(--muted)}
+    .blink{animation:blink 1s infinite}
+    @keyframes blink{50%{opacity:.35}}
 
-.small{font-size:13px; color:var(--muted)}
+    .win{color:var(--win)}
+    .accent{color:var(--accent)}
+    .muted{color:var(--muted)}
 
-$1
-
+    .small{font-size:13px; color:var(--muted)}
+  $1
   <style>
     .ai.card{background:linear-gradient(180deg, #141827, #101522);}
-  </style></head>
+  </style>
+</head>
 <body>
   <div class="wrap card">
     <h1>Слот с думи</h1>
-    <div class="sub">Колона 1: прилагателно • Колона 2: известен човек • Колона 3: глагол</div><div class="reels" id="reels">
-  <div class="reel" data-type="adj"><div class="ticker"><span class="slot-word">—</span></div></div>
-  <div class="reel" data-type="who"><div class="ticker"><span class="slot-word">—</span></div></div>
-  <div class="reel" data-type="verb"><div class="ticker"><span class="slot-word">—</span></div></div>
-</div>
+    <div class="sub">Колона 1: прилагателно • Колона 2: известен човек • Колона 3: глагол</div>
 
-<div class="btns">
-  <button id="spinBtn" class="primary">Завърти (Space)</button>
-  <button id="shuffleBtn">Разбъркай списъците</button>
-  $1
-  <button id="imgBtn">Генерирай изображение (AI)</button>$2
-</div>
+    <div class="reels" id="reels">
+      <div class="reel" data-type="adj"><div class="ticker"><span class="slot-word">—</span></div></div>
+      <div class="reel" data-type="who"><div class="ticker"><span class="slot-word">—</span></div></div>
+      <div class="reel" data-type="verb"><div class="ticker"><span class="slot-word">—</span></div></div>
+    </div>
 
-<div class="result" id="result"><span class="muted">Натисни „Завърти“.</span></div>
-$1
+    <div class="btns">
+      <button id="spinBtn" class="primary">Завърти (Space)</button>
+      <button id="shuffleBtn">Разбъркай списъците</button>
+      $1
+      <button id="imgBtn">Генерирай изображение (AI)</button>$2
+    </div>
+
+    <div class="result" id="result"><span class="muted">Натисни „Завърти“.</span></div>
+    $1
 
   <div class="ai card" style="margin-top:16px;">
     <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
@@ -108,7 +110,9 @@ $1
       </div>
     </div>
   </div>
-  </div><script>
+  </div>
+
+<script>
 // === Данни ===
 const ADJ = [
   "надменен","красив","тъп","благороден","гладен","отчаян","пиян","злобен",
@@ -274,5 +278,6 @@ showSentence();
 // По желание конфиг:
 // window.AI_ENDPOINT = 'https://твоят-домейн.bg/api/image';
 // window.AI_AUTOGEN = true; // автоматично извикване на generateViaApi() след всяко завъртане
-</script></body>
+</script>
+</body>
 </html>
